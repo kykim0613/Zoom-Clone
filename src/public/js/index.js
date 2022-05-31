@@ -7,29 +7,30 @@ const room = document.getElementById("room");
 room.hidden = true;
 
 let roomName;
+let nickname;
 
 const addMessage = (message) => {
-    const ul = room.querySelector("ul")
-    const li = document.createElement("li")
-    li.innerText = message
+    const ul = room.querySelector("ul");
+    const li = document.createElement("li");
+    li.innerText = message;
     ul.appendChild(li);
+}
+
+const handleNicknameSubmit = (event) => {
+    event.preventDefault();
+    const input = room.querySelector("#name input");
+    nickname = input.value;
+    socket.emit("nickname", nickname)
+    input.value = "";
 }
 
 const handleMessageSubmit = (event) => {
     event.preventDefault();
     const input = room.querySelector("#msg input");
     const value = input.value;
-    socket.emit("new_message", input.value, roomName, () => {
-        addMessage(`You: ${value}`);
+    socket.emit("new_message", value, roomName, () => {
+        addMessage(`${nickname}: ${value}`);
     });
-    input.value = "";
-}
-
-const handleNicknameSubmit = (event) => {
-    event.preventDefault();
-    const input = room.querySelector("#name input");
-    const value = input.value;
-    socket.emit("nickname", value)
     input.value = "";
 }
 
