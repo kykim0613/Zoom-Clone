@@ -16,15 +16,34 @@ const httpServer = http.createServer(app);
 const wsServer = new Server(httpServer);
 
 
+const publicRoom = () => {
+    const {
+        sockets: {
+            adapter: { sids, rooms },
+        },
+    } = wsServer;
+
+    const publicRooms = [];
+    rooms.forEach((_, key) => {
+        if(sids.get(key) === undefined) {
+            publicRooms.push(key);
+        }
+    });
+    return publicRooms;
+}
+
 wsServer.on("connection", socket => {
+    wsServer.sockets.emit("room_change", publicRoom());
     socket["nickname"] = "Yunki";
     socket.onAny((event) => {
-        console.log((`Socket Event: ${event}`))
+        console.log(wsServer.sockets.adapter);
+        console.log((`Socket Event: ${event}`));
     });
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName);
         done()
         socket.to(roomName).emit("welcome!", socket.nickname);
+        wsServer.sockets.emit("room_change", publicRoom());
     });
     socket.on("disconnecting", () => {
         socket.rooms.forEach(room => socket.to(room).emit("bye", socket.nickname));
@@ -62,7 +81,7 @@ httpServer.listen(3000, handleListen);
 //         const message = JSON.parse(msg);
 //         switch(message.type) {
 //             case "new_message":
-//                 sockets.forEach(aSocket => 
+//                 sockets.forEach(aSocket =>
 //                     aSocket.send(`${socket.nickname}: ${message.payload}`));
 //             case "nickname":
 //                 socket["nickname"] = message.payload;
